@@ -12,7 +12,7 @@
 ; *                  i8080 & CP/M-80 ver. 2.2                  *
 ; *                                                            *
 ; *                                                            *
-; *                       Version 0.4.3                        *
+; *                       Version 0.5.0                        *
 ; *                                                            *
 ; *                                                            *
 ; *                                       (C) 2023-2024 Tsugu  *
@@ -42,7 +42,7 @@
 ;               |   .   |
 ;               |   .   |
 ;               |=======|
-;       LIT-6 ->| 0222H |     start of dictionary
+;       LIT-6 ->| 022AH |     start of dictionary
 ;               |   .   |
 ;               |   .   |
 ;      INITDP ->| ????H |     initial position of DP
@@ -107,7 +107,7 @@
 ;               |           |   |
 ;               |-----------| -----
 ;               | 00H | 00H |
-;               |===========| -----
+;               |===========|
 ;       LIMIT ->
 ;
 ; ========== ENVIRONMENT DEPENDENT ==========
@@ -155,10 +155,10 @@ DOFSET	EQU	3		; offset for drive No. (0 = D:, 1 = E:)
 ORIG0	EQU	100H
 BBUF0	EQU	128		; bytes per buffer = BPS
 BSCR0	EQU	8		; blocks per screen
-BFLEN0	EQU	BBUF0+4	        ; buffer tags length = 4
+BFLEN0	EQU	BBUF0+4		; buffer tags length = 4
 LIMIT0	EQU	8000H
 NUMBU0	EQU	2		; number of disk block buffers
-FIRST0	EQU	LIMIT0-BFLEN0-BFLEN0
+FIRST0	EQU	LIMIT0-BFLEN0*NUMBU0
 UP	EQU	FIRST0-40H	; user variables area size = 40H
 INITR0	EQU	UP
 INITS0	EQU	INITR0-0A0H	; return stack size = A0H
@@ -442,7 +442,7 @@ LIT:	DW	$+2	; the address here + 2
 	INX	B
 	JMP	HPUSH
 ;
-; ( cfa ---  )
+; ( cfa --- )
 	DB	87H,'EXECUT','E'+80H
 	DW	LIT-6
 EXEC:	DW	$+2
@@ -521,7 +521,7 @@ XPLOO:	DW	$+2
 	POP	D	; increment = n
 	JMP	XLOOP1
 ;
-; ( n1 n2 --- ; push n1, n2 to Return Stack )
+; ( n1 n2 --- ; Push n1, n2 to Return Stack. )
 	DB	84H,'(DO',')'+80H
 	DW	XPLOO-10
 XDO:	DW	$+2
@@ -592,7 +592,7 @@ SPAT:	DW	$+2
 	DAD	SP
 	JMP	HPUSH
 ;
-; ( --- ; initialize SP )
+; ( --- ; Initialize SP. )
 	DB	83H,'SP','!'+80H
 	DW	SPAT-6
 SPSTO:	DW	$+2
@@ -613,7 +613,7 @@ RPAT:	DW	$+2
 	LHLD	RPP
 	JMP	HPUSH
 ;
-; ( --- ; initialize RP )
+; ( --- ; Initialize RP. )
 	DB	83H,'RP','!'+80H
 	DW	RPAT-6
 RPSTO:	DW	$+2
@@ -639,7 +639,7 @@ SEMIS:	DW	$+2
 	SHLD	RPP
 	JMP	NEXT
 ;
-; ( n --- ; push n to Return Stack )
+; ( n --- ; Push n to Return Stack. )
 	DB	82H,'>','R'+80H
 	DW	SEMIS-5
 TOR:	DW	$+2
@@ -653,7 +653,7 @@ TOR:	DW	$+2
 	MOV	M,D
 	JMP	NEXT
 ;
-; ( --- n ; pop n from Return Stack )
+; ( --- n ; Pop n from Return Stack. )
 	DB	82H,'R','>'+80H
 	DW	TOR-5
 FROMR:	DW	$+2
@@ -666,7 +666,7 @@ FROMR:	DW	$+2
 	PUSH	D
 	JMP	NEXT
 ;
-; ( --- n ; copy n from Return Stack )
+; ( --- n ; Copy n from Return Stack. )
 	DB	82H,'R','@'+80H
 	DW	FROMR-5
 RAT:	DW	$+2
@@ -758,7 +758,7 @@ DPLUS:	DW	$+2
 ; ( d1 d2 --- d3 ; d3 = d1 - d2 )
 	DB	82H,'D','-'+80H
 	DW	DPLUS-5
-DSUBB:	DW	$+2
+DSUB:	DW	$+2
 	POP	H	; HL <- d2H
 	POP	D	; DE <- d2L
 	; DE <- 0 - DE
@@ -782,7 +782,7 @@ DSUBB:	DW	$+2
 ;
 ; ( n1 n2 --- n1 n2 n1 )
 	DB	84H,'OVE','R'+80H
-	DW	DSUBB-5
+	DW	DSUB-5
 OVER:	DW	$+2
 	POP	D
 	POP	H
@@ -964,7 +964,7 @@ TDIV:	DW	$+2
 	MOV	L,A
 	JMP	HPUSH
 ;
-; ( a b --- ; b is 8-bit pattern )
+; ( a b --- ; b is 8-bit pattern. )
 	DB	86H,'TOGGL','E'+80H
 	DW	TDIV-5
 TOGGL:	DW	$+2
@@ -1008,7 +1008,7 @@ CSTOR:	DW	$+2
 ;
 ; ( a1 a2 n --- )
 ; [a2]=[a1], [a2+1]=[a1+1], ...., [a2+n-1]=[a1+n-1]
-	DB	85H,'CMOV','E'+80h
+	DB	85H,'CMOV','E'+80H
 	DW	CSTOR-5
 CMOVEE:	DW	$+2
 	MOV	L,C
@@ -1362,7 +1362,7 @@ UPP:	DW	DOCON
 	DB	82H,'B','L'+80H
 	DW	UPP-5
 BLS:	DW	DOCON
-	DW	20H		; whitespace code
+	DW	20H		; ' ' code
 ;
 ; ( --- n )
 ; (characters per line)
@@ -1691,46 +1691,46 @@ ENCL3:	MVI	D,0
 	DW	ENCL-10
 PFIND:	DW	$+2
 	POP	D	; DE <- a2
-PFIN1:	POP	H	; HL <- a1
+PFIND1:	POP	H	; HL <- a1
 	PUSH	H	; save a1
 	; A <- [a2]
 	LDAX	D
-	; if A & 3FH <> 0 jump to PFIN4
+	; if A & 3FH <> 0 jump to PFIND4
 	XRA	M
 	ANI	3FH	; A & 00111111 (smudge bit & length)
-	JNZ	PFIN4
+	JNZ	PFIND4
 	; HL++, A <- [++DE]
-PFIN2:	INX	H
+PFIND2:	INX	H
 	INX	D
 	LDAX	D
-	; if (A ^ M) + A <> 0 then jump to PFIN3
+	; if (A ^ M) + A <> 0 then jump to PFIND3
 	XRA	M
 	ADD	A
-	JNZ	PFIN3	; no match
-	; if CY == 0 then jump to PFIN2
-	JNC	PFIN2	; A & 80H <> 0
+	JNZ	PFIND3	; no match
+	; if CY == 0 then jump to PFIND2
+	JNC	PFIND2	; A & 80H <> 0
 	; case 1 : string matches
 	LXI	H,3
 	DAD	D
 	XTHL		; [SP] <- CFA
 	JMP	NEXT
-	; if CY == 1 then jump to PFIN5
-PFIN3:	JC	PFIN5	; end of Name Field
+	; if CY == 1 then jump to PFIND5
+PFIND3:	JC	PFIND5	; end of Name Field
 	; find end of Name Field
-PFIN4:	INX	D
+PFIND4:	INX	D
 	LDAX	D
 	ORA	A
-	JP	PFIN4
+	JP	PFIND4
 	; DE <- [LFA]
-PFIN5:	INX	D	; DE <- LFA
+PFIND5:	INX	D	; DE <- LFA
 	XCHG		; HL <-> DE
 	MOV	E,M
 	INX	H
 	MOV	D,M
-	; if DE <> 0 then goto PFN1
+	; if DE <> 0 then goto PFIND1
 	MOV	A,D
 	ORA	E
-	JNZ	PFIN1	; next word
+	JNZ	PFIND1	; next word
 	; case 2 : not find
 	POP	H
 	LXI	H,0	; false
@@ -1747,29 +1747,29 @@ PFIN5:	INX	D	; DE <- LFA
 DIGIT:	DW	$+2
 	POP	H	; HL <- n1
 	POP	D	; E <- c
-	; if c < '0' then jump to DIGI2
+	; if c < '0' then jump to DIGIT2
 	MOV	A,E
 	SUI	30H
-	JM	DIGI2
-	; if c < '9' then jump to DIGI1
+	JM	DIGIT2
+	; if c < '9' then jump to DIGIT1
 	CPI	10	; 0 1 2 3 4 5 6 7 8 9
-	JM	DIGI1
+	JM	DIGIT1
 	; if c < 'A' then jump to DIGIT2
 	SUI	7	; (... 8 9) : ; < = > ? @ (A B ...)
 	CPI	10	; (0 1 2 ... 9) A B C ...
-	JM	DIGI2
+	JM	DIGIT2
 	; if A >= n1 then jump to DIGIT2
-DIGI1:	CMP	L
-	JP	DIGI2
+DIGIT1:	CMP	L
+	JP	DIGIT2
 	; convert success
 	MOV	E,A	; converted digit
 	LXI	H,1	; true
 	JMP	DPUSH
 	; convert failure
-DIGI2:	LXI	H,0	; false
+DIGIT2:	LXI	H,0	; false
 	JMP	HPUSH
 ;
-; ( n1 --- n2 )
+; ( n --- -n )
 	DB	86H,'NEGAT','E'+80H
 	DW	DIGIT-8
 MINUS:	DW	DOCOL
@@ -1778,7 +1778,7 @@ MINUS:	DW	DOCOL
 	DW	SUBB
 	DW	SEMIS
 ;
-; ( d1 --- d2 )
+; ( d --- -d )
 	DB	87H,'DNEGAT','E'+80H
 	DW	MINUS-9
 DMINUS:	DW	DOCOL
@@ -1787,10 +1787,10 @@ DMINUS:	DW	DOCOL
 	DW	ZERO,ZERO
 	DW	FROMR
 	DW	FROMR
-	DW	DSUBB
+	DW	DSUB
 	DW	SEMIS
 ;
-; ( n a --- )
+; ( n a --- ; [a] <- [a]+n )
 	DB	82H,'+','!'+80H
 	DW	DMINUS-10
 PSTOR:	DW	DOCOL
@@ -1802,7 +1802,7 @@ PSTOR:	DW	DOCOL
 	DW	STORE
 	DW	SEMIS
 ;
-; ( a n ---  )
+; ( a n --- ; Fill with nulls. )
 	DB	85H,'ERAS','E'+80H
 	DW	PSTOR-5
 ERASE:	DW	DOCOL
@@ -1810,7 +1810,7 @@ ERASE:	DW	DOCOL
 	DW	FILL
 	DW	SEMIS
 ;
-; ( a n --- )
+; ( a n --- ; Fill with blanks. )
 	DB	86H,'BLANK','S'+80H
 	DW	ERASE-8
 BLANK:	DW	DOCOL
@@ -1826,7 +1826,7 @@ LROT:	DW	DOCOL
 	DW	ROT
 	DW	SEMIS
 ;
-; ( a --- c )
+; ( a --- c ; c = [a] )
 	DB	82H,'C','@'+80H
 	DW	LROT-7
 CAT:	DW	$+2
@@ -1923,7 +1923,7 @@ ULESS1:	JMP	HPUSH
 	DB	82H,'D','<'+80H
 	DW	ULESS-5
 DLESS:	DW	DOCOL
-	DW	DSUBB
+	DW	DSUB
 	DW	SWAP
 	DW	DROP
 	DW	ZLESS
@@ -1953,7 +1953,7 @@ MAX:	DW	DOCOL
 MAX1:	DW	DROP
 	DW	SEMIS
 ;
-; ( n1 n2 --- n3 )
+; ( n1 n2 --- n3 ; n1 if n2 >= 0, -n1 if n2 < 0. )
 	DB	82H,'+','-'+80H
 	DW	MAX-6
 PM:	DW	DOCOL
@@ -1971,7 +1971,7 @@ ABSO:	DW	DOCOL
 	DW	PM
 	DW	SEMIS
 ;
-; ( d1 n --- d2 )
+; ( d1 n --- d2 ;d1 if n >= 0, -d1 if n < 0. )
 	DB	83H,'D+','-'+80H
 	DW	ABSO-6
 DPM:	DW	DOCOL
@@ -2012,7 +2012,7 @@ STOD1:	DW	ZERO
 				; THEN
 STOD2:	DW	SEMIS
 ;
-; ( n1 n2 --- d )
+; ( n1 n2 --- d ; d = n1 * n2 )
 	DB	82H,'M','*'+80H
 	DW	STOD-7
 MSTAR:	DW	DOCOL
@@ -2027,7 +2027,7 @@ MSTAR:	DW	DOCOL
 	DW	DPM
 	DW	SEMIS
 ;
-; ( n1 n2 --- n3 )
+; ( n1 n2 --- n3 ; n3 = n1 * n2 )
 	DB	81H,'*'+80H
 	DW	MSTAR-5
 STAR:	DW	DOCOL
@@ -2035,7 +2035,7 @@ STAR:	DW	DOCOL
 	DW	DROP
 	DW	SEMIS
 ;
-; ( ud1 u2 --- u3 ud4 )
+; ( ud1 u2 --- u3 ud4 ; u3 = ud1 % u2, ud4 = ud1 / u2 )
 	DB	85H,'M/MO','D'+80H
 	DW	STAR-4
 MSMOD:	DW	DOCOL
@@ -2050,7 +2050,7 @@ MSMOD:	DW	DOCOL
 	DW	FROMR
 	DW	SEMIS
 ;
-; ( d n1 --- n2 n3 )
+; ( d n1 --- n2 n3 ; n2 = d % n1, n3 = d / n1 )
 	DB	82H,'M','/'+80H
 	DW	MSMOD-8
 MSLAS:	DW	DOCOL
@@ -2071,7 +2071,7 @@ MSLAS:	DW	DOCOL
 	DW	SWAP
 	DW	SEMIS
 ;
-; ( n1 n2 --- n3 n4 )
+; ( n1 n2 --- n3 n4 ; n3 = n1 % n2, n4 = n1 / n2 )
 	DB	84H,'/MO','D'+80H
 	DW	MSLAS-5
 SLMOD:	DW	DOCOL
@@ -2081,7 +2081,7 @@ SLMOD:	DW	DOCOL
 	DW	MSLAS
 	DW	SEMIS
 ;
-; ( n1 n2 n3 --- n4 n5 )
+; ( n1 n2 n3 --- n4 n5 ; n4 = n1 * n2 % n3, n5 = n1 * n2 / n3 )
 	DB	85H,'*/MO','D'+80H
 	DW	SLMOD-7
 SSMOD:	DW	DOCOL
@@ -2091,7 +2091,7 @@ SSMOD:	DW	DOCOL
 	DW	MSLAS
 	DW	SEMIS
 ;
-; ( n1 n2 --- n3 )
+; ( n1 n2 --- n3 ; n3 = n1 % n2 )
 	DB	83H,'MO','D'+80H
 	DW	SSMOD-8
 MODD:	DW	DOCOL
@@ -2099,7 +2099,7 @@ MODD:	DW	DOCOL
 	DW	DROP
 	DW	SEMIS
 ;
-; ( n1 n2 --- n3 )
+; ( n1 n2 --- n3 ; n3 = n1 / n2 )
 	DB	81H,'/'+80H
 	DW	MODD-6
 SLASH:	DW	DOCOL
@@ -2146,7 +2146,7 @@ TAT:	DW	$+2
 	;
 	JMP	NEXT
 ;
-; ( n --- n )
+; ( n --- n+1 )
 	DB	82H,'1','+'+80H
 	DW	TAT-5
 ONEP:	DW	$+2
@@ -2154,7 +2154,7 @@ ONEP:	DW	$+2
 	INX	H
 	JMP	HPUSH
 ;
-; ( n --- n )
+; ( n --- n+2 )
 	DB	82H,'2','+'+80H
 	DW	ONEP-5
 TWOP:	DW	$+2
@@ -2163,7 +2163,7 @@ TWOP:	DW	$+2
 	INX	H
 	JMP	HPUSH
 ;
-; ( n --- n )
+; ( n --- n-1 )
 	DB	82H,'1','-'+80H
 	DW	TWOP-5
 ONEM:	DW	$+2
@@ -2171,7 +2171,7 @@ ONEM:	DW	$+2
 	DCX	H
 	JMP	HPUSH
 ;
-; ( n --- n )
+; ( n --- n-2 )
 	DB	82H,'2','-'+80H
 	DW	ONEM-5
 TWOM:	DW	$+2
@@ -2180,7 +2180,7 @@ TWOM:	DW	$+2
 	DCX	H
 	JMP	HPUSH
 ;
-; ( n --- n )
+; ( n --- n+n )
 	DB	82H,'2','*'+80H
 	DW	TWOM-5
 TWOS:	DW	DOCOL
@@ -2212,15 +2212,15 @@ DIG:	DW	DOCOL
 	DW	OVER
 	DW	LESS
 	DW	ZBRAN,DIG1-$	; IF
-	DW	LIT,7H		;  ":;<=>?@"
+	DW	LIT,7H		;  7 ( ":;<=>?@" )
 	DW	PLUS
 				; THEN
-DIG1:	DW	LIT,30H		; '0' code
+DIG1:	DW	LIT,30H		; ( '0' code )
 	DW	PLUS
 	DW	HOLD
 	DW	SEMIS
 ;
-; ( ud1 --- ud1 ; ud1 = 0.0 )
+; ( ud1 --- ud2 ; ud2 = 0.0 )
 	DB	82H,'#','S'+80H
 	DW	DIG-4
 DIGS:	DW	DOCOL
@@ -2260,7 +2260,7 @@ SIGN:	DW	DOCOL
 	DW	ROT
 	DW	ZLESS
 	DW	ZBRAN,SIGN1-$	; IF
-	DW	LIT,2DH
+	DW	LIT,2DH		;  ( '-' code )
 	DW	HOLD
 				; THEN
 SIGN1:	DW	SEMIS
@@ -2298,9 +2298,9 @@ TYPES2:	DW	SEMIS
 	DB	82H,'C','R'+80H
 	DW	TYPES-7
 CR:	DW	DOCOL
-	DW	LIT,0DH		; CR code
+	DW	LIT,0DH		; ( CR code )
 	DW	EMIT
-	DW	LIT,0AH		; LF code
+	DW	LIT,0AH		; ( LF code )
 	DW	EMIT
 	DW	SEMIS
 ;
@@ -2341,7 +2341,7 @@ DTRAI1:	DW	TDUP
 	DW	BLS
 	DW	SUBB
 	DW	ZBRAN,DTRAI2-$	;  IF
-	DW	LEAVE
+	DW	LLEAVE
 	DW	BRAN,DTRAI3-$	;  ELSE
 DTRAI2:	DW	ONEM
 				;  THEN
@@ -2366,7 +2366,7 @@ PDOTQ:	DW	DOCOL
 	DB	0C2H,'.','"'+80H
 	DW	PDOTQ-7
 DOTQ:	DW	DOCOL
-	DW	LIT,22H		; " CODE
+	DW	LIT,22H		; ( '"' code )
 	DW	STATE
 	DW	ATT
 	DW	ZBRAN,DOTQ1-$	; IF
@@ -2455,7 +2455,7 @@ HEX:	DW	DOCOL
 	DW	STORE
 	DW	SEMIS
 ;
-; ( n1 n2 --- a 64 )
+; ( line scr --- a C/L )
 	DB	86H,'(LINE',')'+80H
 	DW	HEX-6
 PLINE:	DW	DOCOL
@@ -2664,7 +2664,7 @@ LATES:	DW	DOCOL
 	DW	LATES-9
 SMUDG:	DW	DOCOL
 	DW	LATES
-	DW	LIT,20H		; = 0b 10 0000
+	DW	LIT,20H		; ( = 0b 10 0000 )
 	DW	TOGGL
 	DW	SEMIS
 ;
@@ -2676,7 +2676,7 @@ PORIG:	DW	DOCOL
 	DW	PLUS
 	DW	SEMIS
 ;
-; ( a1 n --- a2 ; n is a direction flag )
+; ( a1 n --- a2 ; n is a direction flag. )
 	DB	88H,'TRAVERS','E'+80H
 	DW	PORIG-10
 TRAV:	DW	DOCOL
@@ -2741,7 +2741,7 @@ LBRAC:	DW	DOCOL
 	DB	081H,']'+80H
 	DW	LBRAC-4
 RBRAC:	DW	DOCOL
-	DW	LIT,0C0H	; = 0b 1100 0000
+	DW	LIT,0C0H	; ( = 0b 1100 0000 )
 	DW	STATE
 	DW	STORE
 	DW	SEMIS
@@ -2782,7 +2782,7 @@ CCOMM:	DW	DOCOL
 	DW	CCOMM-5
 IMMED:	DW	DOCOL
 	DW	LATES
-	DW	LIT,40H		; = 0b 100 0000
+	DW	LIT,40H		; ( = 0b 100 0000 )
 	DW	TOGGL
 	DW	SEMIS
 ;
@@ -2791,7 +2791,7 @@ IMMED:	DW	DOCOL
 	DW	IMMED-12
 VOCAB:	DW	DOCOL
 	DW	CREAT
-	DW	LIT,0A081H	; "blank" word (DB 81H,' '+80H)
+	DW	LIT,0A081H	; "blank" word (= DB 81H,' '+80H)
 	DW	COMMA
 	DW	CURR
 	DW	ATT
@@ -2814,7 +2814,7 @@ DOVOC:	JMP	XDOES
 	DB	0C5H,'FORT','H'+80H
 	DW	VOCAB-13
 FORTH:	DW	DOVOC
-	DW	0A081H		; "blank" word (DB 81H,' '+80H)
+	DW	0A081H		; "blank" word (= DB 81H,' '+80H)
 	DW	STAN79-14	; latest word
 	DW	0
 ;
@@ -2847,14 +2847,14 @@ FORG:	DW	DOCOL
 	DW	STORE
 	DW	SEMIS
 ;
-; ( --- a )
+; ( --- DP )
 	DB	85H,'<MAR','K'+80H
 	DW	FORG-9
 LMARK:	DW	DOCOL
 	DW	HERE
 	DW	SEMIS
 ;
-; ( --- a )
+; ( --- DP )
 	DB	85H,'>MAR','K'+80H
 	DW	LMARK-8
 GMARK:	DW	DOCOL
@@ -3005,10 +3005,10 @@ PLOOP:	DW	DOCOL
 	DW	LRESOL
 	DW	SEMIS
 ;
-; ( --- ; exit loop )
+; ( --- ; Exit a loop. )
 	DB	85H,'LEAV','E'+80H
 	DW	PLOOP-8
-LEAVE:	DW	$+2
+LLEAVE:	DW	$+2
 	LHLD	RPP
 	MOV	E,M
 	INX	H
@@ -3021,7 +3021,7 @@ LEAVE:	DW	$+2
 ;
 ; ( --- n ; n = loop counter )
 	DB	81H,'I'+80H
-	DW	LEAVE-8
+	DW	LLEAVE-8
 IDO:	DW	RAT+2
 ;
 ; ( --- n ; n = outer loop counter )
@@ -3096,8 +3096,7 @@ ROLL:	DW	DOCOL
 	DW	DROP
 	DW	SEMIS
 ;
-; ( n --- )
-; reverse of ROLL
+; ( n --- ; reverse of ROLL )
 	DB	85H,'<ROL','L'+80H
 	DW	ROLL-7
 LROLL:	DW	DOCOL
@@ -3138,8 +3137,7 @@ FIND:	DW	DOCOL
 FIND1:	DW	SEMIS
 ;
 ; ( --- pfa : execution ; --- : compiling ) <name>
-	DB	0C1H
-	DB	''''+80H	; word "'"
+	DB	0C1H,''''+80H	; word "'"
 	DW	FIND-7
 TICK:	DW	DOCOL
 	DW	FIND
@@ -3151,7 +3149,7 @@ TICK:	DW	DOCOL
 	DW	LITER		; [COMPILE] LITERAL
 	DW	SEMIS
 ;
-; ( c --- a )
+; ( c --- a ; c is a delimiter. )
 	DB	84H,'WOR','D'+80H
 	DW	TICK-4
 WORDS:	DW	DOCOL
@@ -3171,7 +3169,7 @@ WORDS2:	DW	INN
 	DW	SWAP
 	DW	ENCL
 	DW	HERE
-	DW	LIT,22H		; 22 bytes
+	DW	LIT,22H		; ( 22 bytes )
 	DW	BLANK
 	DW	INN
 	DW	PSTOR
@@ -3193,7 +3191,7 @@ WORDS2:	DW	INN
 	DB	0C1H,'('+80H
 	DW	WORDS-7
 PAREN:	DW	DOCOL
-	DW	LIT,29H		; right parenthesis code
+	DW	LIT,29H		; ( ')' code )
 	DW	WORDS
 	DW	DROP
 	DW	SEMIS
@@ -3205,10 +3203,10 @@ EXPEC:	DW	DOCOL
 	DW	OVER
 	DW	PLUS
 	DW	OVER
-	DW	XDO
+	DW	XDO		; DO
 EXPEC1:	DW	KEY
 	DW	DUPE
-	DW	LIT,8H		; backspace code
+	DW	LIT,8H		;  ( backspace code )
 	DW	EQUAL
 	DW	ZBRAN,EXPEC2-$	;  IF
 	DW	DROP
@@ -3221,20 +3219,20 @@ EXPEC1:	DW	KEY
 	DW	PLUS
 	DW	TOR
 	DW	ZBRAN,EXPEC6-$	;   IF
-	DW	LIT,7H		;    bell code
+	DW	LIT,7H		;    ( bell code )
 	DW	BRAN,EXPEC7-$	;   ELSE
-EXPEC6:	DW	LIT,8H		;    backspace code
+EXPEC6:	DW	LIT,8H		;    ( backspace code )
 	DW	EMIT
 	DW	BLS
 	DW	EMIT
-	DW	LIT,8H		;    backspace code
+	DW	LIT,8H		;    ( backspace code )
 				;   THEN
 EXPEC7:	DW	BRAN,EXPEC3-$	;  ELSE
 EXPEC2:	DW	DUPE
-	DW	LIT,0DH		;   carriage return code
+	DW	LIT,0DH		;   ( CR code )
 	DW	EQUAL
 	DW	ZBRAN,EXPEC4-$	;   IF
-	DW	LEAVE
+	DW	LLEAVE
 	DW	DROP
 	DW	BLS
 	DW	ZERO
@@ -3341,7 +3339,7 @@ NUMB:	DW	DOCOL
 	DW	DUPE
 	DW	ONEP
 	DW	CAT
-	DW	LIT,2DH		; '-' code
+	DW	LIT,2DH		; ( '-' code )
 	DW	EQUAL
 	DW	DUPE
 	DW	TOR
@@ -3358,7 +3356,7 @@ NUMB1:	DW	DPL
 	DW	ZBRAN,NUMB2-$	; WHILE
 	DW	DUPE
 	DW	CAT
-	DW	LIT,2EH		;  '.' code
+	DW	LIT,2EH		;  ( '.' code )
 	DW	SUBB
 	DW	ZERO
 	DW	QERR
@@ -3367,7 +3365,7 @@ NUMB1:	DW	DPL
 NUMB2:	DW	DROP
 	DW	FROMR
 	DW	ZBRAN,NUMB3-$	; IF
-	DW	DMINUS		;  DMINUS
+	DW	DMINUS		;  DNEGATE
 				; THEN
 NUMB3:	DW	SEMIS
 ;
@@ -3397,7 +3395,7 @@ UPDAT:	DW	DOCOL
 	DW	PREV
 	DW	ATT
 	DW	ATT
-	DW	LIT,8000H	; Set most significant bit.
+	DW	LIT,8000H	; ( Set the most significant bit. )
 	DW	ORR
 	DW	PREV
 	DW	ATT
@@ -3458,7 +3456,8 @@ DRONE:	DW	DOCOL
 	DW	STORE
 	DW	SEMIS
 ;
-; ( a n f --- ; read/write disk, read if f=1, write if f=0 )
+; ( a n f --- ; Read/write disks. )
+; Read if f=1, write if f=0.
 ; a: buffer address
 ; n: block number
 ; f: direction flag
@@ -3474,10 +3473,10 @@ RSLW:	DW	DOCOL
 	DW	FROMR
 	DW	ZBRAN,RSLW1-$	; IF
 	DW	RREC
-	DW	LIT,8H		;  error #8
+	DW	LIT,8H		;  8 ( error #8 )
 	DW	BRAN,RSLW2-$	; ELSE
 RSLW1:	DW	WREC
-	DW	LIT,9H		;  error #9
+	DW	LIT,9H		;  9 ( error #9 )
 				; THEN
 RSLW2:	DW	OVER
 	DW	SWAP
@@ -3487,7 +3486,7 @@ RSLW2:	DW	OVER
 	DW	ZERO
 	DW	PREV
 	DW	ATT
-	DW	STORE		;  This buffer is no good.
+	DW	STORE		;  ( This buffer is no good. )
 				; THEN
 RSLW3:	DW	DSKERR
 	DW	STORE
@@ -3611,7 +3610,6 @@ INTER7:	DW	QSTAC
 INTER3:	DW	BRAN,INTER1-$	; AGAIN
 ;
 ; ( --- )
-;
 	DB	84H,'QUI','T'+80H
 	DW	INTER-12
 QUIT:	DW	DOCOL
@@ -3640,7 +3638,7 @@ ABORT:	DW	DOCOL
 ;-------------------------------------------
 	DW	CR
 	DW	PDOTQ
-	DB	18,'FORTH80 Ver. 0.4.3'
+	DB	18,'FORTH80 Ver. 0.5.0'
 ;-------------------------------------------
 	DW	SPSTO
 	DW	DECA
@@ -3649,7 +3647,7 @@ ABORT:	DW	DOCOL
 	DW	DEFIN
 	DW	QUIT
 ;
-; ( n ---  )
+; ( n --- )
 	DB	87H,'MESSAG','E'+80H
 	DW	ABORT-8
 MESS:	DW	DOCOL
@@ -3713,7 +3711,7 @@ QERR1:	DW	DROP
 				; THEN
 QERR2:	DW	SEMIS
 ;
-; ( n ---  )
+; ( n --- )
 	DB	84H,'LOA','D'+80H
 	DW	QERR-9
 LOAD:	DW	DOCOL
@@ -3762,7 +3760,7 @@ ARROW:	DW	DOCOL
 	DW	ARROW-6
 IDDOT:	DW	DOCOL
 	DW	PAD
-	DW	LIT,22H		; 22 bytes
+	DW	LIT,22H		; ( 22 bytes )
 	DW	BLANK
 	DW	DUPE
 	DW	PFA
@@ -3774,7 +3772,7 @@ IDDOT:	DW	DOCOL
 	DW	CMOVEE
 	DW	PAD
 	DW	COUNT
-	DW	LIT,1FH		; = 31
+	DW	LIT,1FH		; 1F ( 31 )
 	DW	ANDD
 	DW	TDUP
 	DW	PLUS
@@ -3882,8 +3880,7 @@ CODE:	DW	DOCOL
 	DW	SEMIS
 ;
 ; ( --- )
-	DB	088H
-	DB	'END-COD','E'+80H
+	DB	88H,'END-COD','E'+80H
 	DW	CODE-7
 ENDCO:	DW	DOCOL
 	DW	CURR
@@ -3955,7 +3952,7 @@ LIST1:	DW	CR
 	DW	ATT
 	DW	PLINE
 	DW	TYPES
-	DW	LIT,3CH		; '<' code
+	DW	LIT,3CH		; ( '<' code )
 	DW	EMIT
 	DW	XLOOP,LIST1-$	; LOOP
 	DW	CR
@@ -3971,6 +3968,6 @@ STAN79:	DW	DOCOL
 ;
 ; ***************************************
 ;
-INITDP:	EQU	$	 ; initial Dictionry Pointer
+INITDP	EQU	$	 ; initial DP
 ;
 	END	ORIG
