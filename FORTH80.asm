@@ -12,7 +12,7 @@
 ; *                  i8080 & CP/M-80 ver. 2.2                  *
 ; *                                                            *
 ; *                                                            *
-; *                       Version 0.5.1                        *
+; *                       Version 0.5.2                        *
 ; *                                                            *
 ; *                                                            *
 ; *                                       (C) 2023-2024 Tsugu  *
@@ -200,7 +200,7 @@ WRM1:	DW	WARM
 ;
 UVR:	DW	0		; (release No.)
 	DW	5		; (revision No.)
-	DW	0100H		; (user version)
+	DW	0200H		; (user version)
 	DW	INITS0		; S0
 	DW	INITR0		; R0
 	DW	INITS0		; TIB
@@ -542,7 +542,7 @@ XDO:	DW	$+2
 	MOV	M,D
 	JMP	NEXT
 ;
-; ( n1 n2 --- n3 )
+; ( n1 n2 --- n3 ; n3 = n1 & n2 )
 	DB	83H,'AN','D'+80H
 	DW	XDO-7
 ANDD:	DW	$+2
@@ -556,7 +556,7 @@ ANDD:	DW	$+2
 	MOV	H,A
 	JMP	HPUSH
 ;
-; ( n1 n2 --- n3 )
+; ( n1 n2 --- n3 ; n3 = n1 | n2 )
 	DB	82H,'O','R'+80H
 	DW	ANDD-6
 ORR:	DW	$+2
@@ -570,7 +570,7 @@ ORR:	DW	$+2
 	MOV	H,A
 	JMP	HPUSH
 ;
-; ( n1 n2 --- n3 )
+; ( n1 n2 --- n3 ; n3 = n1 ^ n2 )
 	DB	83H,'XO','R'+80H
 	DW	ORR-5
 XORR:	DW	$+2
@@ -1168,7 +1168,7 @@ DOTVAR:	INX	D
 	PUSH	D
 	JMP	NEXT
 ;
-; ( --- ) <name>
+; ( n --- ) <name>
 	DB	84H,'USE','R'+80H
 	DW	TVAR-12
 USER:	DW	DOCOL
@@ -3206,7 +3206,7 @@ EXPEC:	DW	DOCOL
 	DW	XDO		; DO
 EXPEC1:	DW	KEY
 	DW	DUPE
-	DW	LIT,8H		;  ( backspace code )
+	DW	LIT,8H		;  ( BS code )
 	DW	EQUAL
 	DW	ZBRAN,EXPEC2-$	;  IF
 	DW	DROP
@@ -3221,11 +3221,11 @@ EXPEC1:	DW	KEY
 	DW	ZBRAN,EXPEC6-$	;   IF
 	DW	LIT,7H		;    ( bell code )
 	DW	BRAN,EXPEC7-$	;   ELSE
-EXPEC6:	DW	LIT,8H		;    ( backspace code )
+EXPEC6:	DW	LIT,8H		;    ( BS code )
 	DW	EMIT
 	DW	BLS
 	DW	EMIT
-	DW	LIT,8H		;    ( backspace code )
+	DW	LIT,8H		;    ( BS code )
 				;   THEN
 EXPEC7:	DW	BRAN,EXPEC3-$	;  ELSE
 EXPEC2:	DW	DUPE
@@ -3711,7 +3711,7 @@ ERROR1:	DW	HERE
 	DW	COUNT
 	DW	TYPES
 	DW	PDOTQ
-	DB	2,'? '
+	DB	3,' ? '
 	DW	MESS
 	DW	SPSTO
 	DW	BLK
