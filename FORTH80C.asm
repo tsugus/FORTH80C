@@ -1,7 +1,7 @@
 ; **************************************************************
 ; *                                                            *
 ; *                                                            *
-; *                    F  O  R  T  H  8  0                     *
+; *                   F  O  R  T  H  8  0  C                   *
 ; *                                                            *
 ; *                                                            *
 ; *                 A FORTH langage proccessor                 *
@@ -12,7 +12,7 @@
 ; *                  i8080 & CP/M-80 ver. 2.2                  *
 ; *                                                            *
 ; *                                                            *
-; *                       Version 0.5.3                        *
+; *                       Version 0.5.4                        *
 ; *                                                            *
 ; *                                                            *
 ; *                                       (C) 2023-2024 Tsugu  *
@@ -200,7 +200,7 @@ WRM1	DW	WARM
 ;
 UVR	DW	0		; (release No.)
 	DW	5		; (revision No.)
-	DW	0300H		; (user version)
+	DW	0400H		; (user version)
 	DW	INITS0		; S0
 	DW	INITR0		; R0
 	DW	INITS0		; TIB
@@ -3638,7 +3638,7 @@ ABORT	DW	DOCOL
 ;-------------------------------------------
 	DW	CR
 	DW	PDOTQ
-	DB	13,'FORTH80 Ver. '
+	DB	14,'FORTH80C Ver. '
 	DW	TUVR
 	DW	ATT		; release No.
 	DW	ZERO,ZERO,DDOTR	; U. without spaces

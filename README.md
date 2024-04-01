@@ -1,11 +1,11 @@
-# FORTH80
+# FORTH80C
 
 An processor of the programming language FORTH, which run on the OS CP/M-80.
 
 For AltairZ80 (Altair 8800 emulator).
 For XM8 (NEC PC-8801 emulator) too.
 
-FORTH80 compliants with FORTH-79 standard.
+FORTH80C compliants with FORTH-79 standard.
 
 -------------------------
 -------------------------
