@@ -9,7 +9,7 @@
 /*            writing a data file into a CP/M disk image            */
 /*                       in .d88 file format.                       */
 /*                                                                  */
-/*                            Ver.  0.1.2                           */
+/*                            Ver.  0.1.3                           */
 /*                                                                  */
 /*                                                  (C) 2024 Tsugu  */
 /*                                                                  */
@@ -272,7 +272,7 @@ int main(int argc, char *argv[])
   {
   case 1:
     printf("Usage:\n");
-    printf(" <this program name> <.d88 file name> <CP/M-80 file name> [RETURN]\n");
+    printf(" ./<this program name> <.d88 file name> <CP/M-80 file name> [RETURN]\n");
     printf(" It writes the file <CP/M-80 file name> into the file <.d88 file name> for PC-8801 emulators.\n");
     return 0;
   case 3:
