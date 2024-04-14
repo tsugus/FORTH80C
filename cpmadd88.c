@@ -110,11 +110,11 @@ void separate_name()
   int len, i;
 
   len = strlen(cpm_filename) - strlen(ext) - 1;
-  for (i = 0; i < ((len < 8) ? len : 8); i++)
+  for (i = 0; i < (len < 8 ? len : 8); i++)
     name[i] = toupper(cpm_filename[i]);
 
   len = strlen(ext);
-  for (i = 0; i < ((len < 3) ? len : 3); i++)
+  for (i = 0; i < (len < 3 ? len : 3); i++)
     extension[i] = toupper(ext[i]);
 }
 
@@ -244,8 +244,8 @@ void write_in()
     save_record(wfp, RPD * (last_living_block_num + 1) + written_records);
     written_records++;
     FCB_buff[12] = used_FCBs;
-    FCB_buff[15] = (written_records % 128) ? (written_records % 128) : 0x80;
-    int written_blocks = written_records / RPD + ((written_records % RPD) ? 1 : 0);
+    FCB_buff[15] = written_records % 128 ? written_records % 128 : 0x80;
+    int written_blocks = written_records / RPD + (written_records % RPD ? 1 : 0);
     int offset = (16 + written_blocks - 1) % 16;
     FCB_buff[16 + offset] = last_living_block_num + written_blocks;
 
