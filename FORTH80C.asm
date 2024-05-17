@@ -11,7 +11,7 @@
 ; *                                                          *
 ; *                 i8080 & CP/M-80 ver. 2.2                 *
 ; *                                                          *
-; *                      Version 0.5.9                       *
+; *                      Version 0.5.10                      *
 ; *                                                          *
 ; *                                     (C) 2023-2024 Tsugu  *
 ; *                                                          *
@@ -126,41 +126,41 @@
 ;
 ; ========== ENVIRONMENT DEPENDENT ==========
 ;
-; ***** Floppy Disk Configuration (CP/M Ver 2.2 standard) *****
+; *** Floppy Disk Configuration (CP/M Ver 2.2 standard) ***
 ;
 ; BPS (bytes per sector) = 128
-;SPT	EQU	26		; sectors per track
+;SPT	EQU	26	; sectors per track
 ; number of tracks = 77
-;DRSIZ	EQU	250		; drive size (KB)
-;SOFSET	EQU	0		; offset for sector No.
-;DOFSET	EQU	0		; offset for drive No. (0 = A:, 1 = B:)
+;DRSIZ	EQU	250	; drive size (KB)
+;SOFSET	EQU	0	; offset for sector No.
+;DOFSET	EQU	0	; offset for drive No. (0 = A:, 1 = B:)
 ;
-; ***** Floppy Disk Configuration (for emulator AltairZ80) *****
+; *** Floppy Disk Configuration (for emulator AltairZ80) ***
 ;
 ; BPS (bytes per sector) = 128 (in actually, 137)
-SPT	EQU	32		; sectors per track
+SPT	EQU	32	; sectors per track
 ; number of tracks = 254
-DRSIZ	EQU	1016		; drive size (KB)
-SOFSET	EQU	0		; offset for sector No.
-DOFSET	EQU	3		; offset for drive No. (0 = D:, 1 = E:)
+DRSIZ	EQU	1016	; drive size (KB)
+SOFSET	EQU	0	; offset for sector No.
+DOFSET	EQU	3	; offset for drive No. (0 = D:, 1 = E:)
 ;
-; ***** Floppy Disk Configuration (for emulator XM8, N-mode) *****
-;
-; BPS (bytes per sector) = 128
-;SPT	EQU	64		; sectors per track
-; number of tracks = 40
-;DRSIZ	EQU	320		; drive size (KB)
-;SOFSET	EQU	0		; offset for sector No.
-;DOFSET	EQU	0		; offset for drive No. (0 = A:, 1 = B:)
-;
-; ***** Floppy Disk Configuration (for emulator XM8, V-mode) *****
+; *** Floppy Disk Configuration (for emulator XM8, N-mode) ***
 ;
 ; BPS (bytes per sector) = 128
-;SPT	EQU	64		; sectors per track
+;SPT	EQU	64	; sectors per track
 ; number of tracks = 40
-;DRSIZ	EQU	320		; drive size (KB)
-;SOFSET	EQU	-1		; offset for sector No.
-;DOFSET	EQU	0		; offset for drive No. (0 = A:, 1 = B:)
+;DRSIZ	EQU	320	; drive size (KB)
+;SOFSET	EQU	0	; offset for sector No.
+;DOFSET	EQU	0	; offset for drive No. (0 = A:, 1 = B:)
+;
+; *** Floppy Disk Configuration (for emulator XM8, V-mode) ***
+;
+; BPS (bytes per sector) = 128
+;SPT	EQU	64	; sectors per track
+; number of tracks = 40
+;DRSIZ	EQU	320	; drive size (KB)
+;SOFSET	EQU	-1	; offset for sector No.
+;DOFSET	EQU	0	; offset for drive No. (0 = A:, 1 = B:)
 ;
 ; ===========================================
 ;
@@ -173,13 +173,16 @@ BFLEN0	EQU	BBUF0+4		; buffer tags length = 4
 LIMIT0	EQU	8000H
 NUMBU0	EQU	2		; number of disk block buffers
 FIRST0	EQU	LIMIT0-BFLEN0*NUMBU0
-UP	EQU	FIRST0-40H	; user variables area size = 40H
+UP	EQU	FIRST0-40H	; user variables area size
+				;                        = 40H
 INITR0	EQU	UP
 INITS0	EQU	INITR0-0A0H	; return stack size = A0H
 ;
 MXTOKN	EQU	34		; max bytes of tokens
 				;  (On 2-base,
-				;  'length' + '-' + "16-digits" + '.' + "16-digits")
+				;  'length' + '-'
+				;    + "16-digits"
+				;    + '.' + "16-digits")
 WRDBSZ	EQU	64+6		; word buffer size ( > C/L)
 PADSZ	EQU	80+1		; PAD size
 TMPBSZ	EQU	WRDBSZ+PADSZ	; temporary buffer area size
@@ -221,7 +224,7 @@ WRM1	DW	WARM
 ;
 UVR	DW	0		; (release No.)
 	DW	5		; (revision No.)
-	DW	0900H		; (user version)
+	DW	0A00H		; (user version)
 	DW	INITS0		; S0
 	DW	INITR0		; R0
 	DW	INITS0		; TIB
@@ -1088,7 +1091,6 @@ LCMOV2:	MOV	A,B
 	JMP	NEXT
 ;
 ; ( a n b --- ; Fill the n bytes on or after a with b. )
-; Fill from address a to address a+n-1 with byte b.
 	DB	84H,'FIL','L'+80H
 	DW	LCMOVE-9
 FILL	DW	$+2
@@ -1709,7 +1711,8 @@ ENCL3:	MVI	D,0
 	PUSH	D	; push n3 (= counter + 1)
 	JMP	NEXT
 ;
-; ( a1 a2 --- a / ff ; Search a FORCE WORD in the FORTH DICTONARY. )
+; ( a1 a2 --- a / ff ;
+;             Search a FORCE WORD in the FORTH DICTONARY. )
 ; a1: top address of text string searched
 ; a2: NFA at which start searching
 ; a : CFA of the found word
@@ -2242,7 +2245,7 @@ DIG	DW	DOCOL
 	DW	LIT,7H		;  7 ( ":;<=>?@" )
 	DW	PLUS
 				; THEN
-DIG1	DW	LIT,30H		; ( '0' code )
+DIG1	DW	LIT,30H		; 30 ( '0' code )
 	DW	PLUS
 	DW	HOLD
 	DW	SEMIS
@@ -2818,7 +2821,7 @@ IMMED	DW	DOCOL
 	DW	IMMED-12
 VOCAB	DW	DOCOL
 	DW	CREAT
-	DW	LIT,0A081H	; "blank" word (= DB 81H,' '+80H)
+	DW	LIT,0A081H	; "blank" word (= 81H,' '+80H)
 	DW	COMMA
 	DW	CURR
 	DW	ATT
@@ -2841,7 +2844,7 @@ DOVOC:	JMP	XDOES
 	DB	0C5H,'FORT','H'+80H
 	DW	VOCAB-13
 FORTH	DW	DOVOC
-	DW	0A081H		; "blank" word (= DB 81H,' '+80H)
+	DW	0A081H		; "blank" word (= 81H,' '+80H)
 	DW	STAN79-14	; latest word
 	DW	0
 ;
@@ -3196,7 +3199,7 @@ WORDS2	DW	INN
 	DW	SWAP
 	DW	ENCL
 	DW	HERE
-	DW	LIT,MXTOKN+2	; ( include a length byte and "margin" )
+	DW	LIT,MXTOKN+2
 	DW	BLANK
 	DW	INN
 	DW	PSTOR
@@ -3422,7 +3425,7 @@ UPDAT	DW	DOCOL
 	DW	PREV
 	DW	ATT
 	DW	ATT
-	DW	LIT,8000H	; ( Set the most significant bit. )
+	DW	LIT,8000H	; ( Set the MSB. )
 	DW	ORR
 	DW	PREV
 	DW	ATT
@@ -3665,7 +3668,7 @@ ABORT	DW	DOCOL
 ;-------------------------------------------
 	DW	CR
 	DW	PDOTQ
-	DB	14,'FORTH80C Ver. '
+	DB	17,'FORTH80C Version '
 	DW	TUVR
 	DW	ATT		; release No.
 	DW	ZERO,ZERO,DDOTR	; U. without spaces
@@ -3915,7 +3918,7 @@ DOTES1	DW	SEMIS
 	DB	0C9H,'ASSEMBLE','R'+80H
 	DW	DOTES-5
 ASSEM	DW	DOVOC
-	DW	0A081H		; "blank" word (DB 81H,' '+80H)
+	DW	0A081H		; "blank" word (= 81H,' '+80H)
 	DW	STAN79-14
 	DW	FORTH+6
 ;
