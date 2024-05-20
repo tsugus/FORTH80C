@@ -314,7 +314,7 @@ POUT	DW	$+2
 	POP	B
 	JMP	NEXT
 ;
-; ( secNo bufAddr drvNo --- errFlg ; Read a sector on disks. )
+; ( drvNo bufAddr secNo --- errFlg ; Read a sector on disks. )
 READ	DW	$+2
 	POP	D	; truck No.
 	PUSH	B
@@ -355,7 +355,7 @@ READ	DW	$+2
 	MVI	H,0
 	JMP	HPUSH
 ;
-; ( secNo bufAddr drvNo --- errFLg ; Write a sector on disks. )
+; ( drvNo bufAddr secNo --- errFLg ; Write a sector on disks. )
 WRITE	DW	$+2
 	POP	D	; truck No.
 	PUSH	B
