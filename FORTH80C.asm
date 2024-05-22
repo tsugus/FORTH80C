@@ -11,7 +11,7 @@
 ; *                                                          *
 ; *                 i8080 & CP/M-80 ver. 2.2                 *
 ; *                                                          *
-; *                      Version 0.5.10                      *
+; *                      Version 0.5.11                      *
 ; *                                                          *
 ; *                                     (C) 2023-2024 Tsugu  *
 ; *                                                          *
@@ -224,7 +224,7 @@ WRM1	DW	WARM
 ;
 UVR	DW	0		; (release No.)
 	DW	5		; (revision No.)
-	DW	0A00H		; (user version)
+	DW	0B00H		; (user version)
 	DW	INITS0		; S0
 	DW	INITR0		; R0
 	DW	INITS0		; TIB
@@ -1135,9 +1135,52 @@ DOCOL:	LHLD	RPP
 	MOV	B,D
 	JMP	NEXT
 ;
+; ( --- a )
+	DB	0C5H,'DOES','>'+80H
+	DW	COLON-4
+DOES	DW	DOCOL
+	DW	COMP
+	DW	PSCOD
+	DW	LIT,0C3H	; jump code ('JMP' = 0xC3)
+	DW	CCOMM
+	DW	LIT,XDOES	; In 8080, no relative jump.
+	DW	COMMA
+	DW	SEMIS
+XDOES:	PUSH	H
+	; push IP to Return Stack
+	LHLD	RPP
+	DCX	H
+	MOV	M,B
+	DCX	H
+	MOV	M,C
+	SHLD	RPP
+	POP	H
+	; IP <- [HL]
+	MOV	C,L
+	MOV	B,H
+	; IP <- IP + 3 ("C3 xxxx" is 3 bytes)
+	INX	B
+	INX	B
+	INX	B
+	;
+	INX	D
+	PUSH	D
+	JMP	NEXT
+;
+; ( --- ) <name>
+	DB	86H,'CREAT','E'+80H
+	DW	DOES-8
+CREAT	DW	DOCOL
+	DW	PCREAT
+	DW	SMUDG
+	DW	PSCOD
+	INX	D	; DE = PFA
+	PUSH	D
+	JMP	NEXT
+;
 ; ( n --- ) <name>
 	DB	88H,'CONSTAN','T'+80H
-	DW	COLON-4
+	DW	CREAT-9
 CON	DW	DOCOL
 	DW	PCREAT
 	DW	SMUDG
@@ -1211,57 +1254,9 @@ DOUSE:	INX	D	; DE = PFA
 	DAD	D	; HL <- HL + DE
 	JMP	HPUSH
 ;
-; ( --- a )
-	DB	0C5H,'DOES','>'+80H
-	DW	USER-7
-DOES	DW	DOCOL
-	DW	COMP
-	DW	PSCOD
-	DW	LIT,0C3H	; jump code ('JMP' = 0xC3)
-	DW	CCOMM
-; (
-;	DW	LIT,XDOES-2
-;	DW	HERE
-;	DW	SUBB		; "JMP a" = "C3 a-$-2"
-; )
-	DW	LIT,XDOES	; In 8080, no relative jump.
-	DW	COMMA
-	DW	SEMIS
-XDOES:	PUSH	H
-	; push IP to Return Stack
-	LHLD	RPP
-	DCX	H
-	MOV	M,B
-	DCX	H
-	MOV	M,C
-	SHLD	RPP
-	POP	H
-	; IP <- [HL]
-	MOV	C,L
-	MOV	B,H
-	; IP <- IP + 3 ("C3 xxxx" is 3 bytes)
-	INX	B
-	INX	B
-	INX	B
-	;
-	INX	D
-	PUSH	D
-	JMP	NEXT
-;
-; ( --- ) <name>
-	DB	86H,'CREAT','E'+80H
-	DW	DOES-8
-CREAT	DW	DOCOL
-	DW	PCREAT
-	DW	SMUDG
-	DW	PSCOD
-	INX	D	; DE = PFA
-	PUSH	D
-	JMP	NEXT
-;
 ; ( --- )
 	DB	84H,'COL','D'+80H
-	DW	CREAT-9
+	DW	USER-7
 COLD	DW	DOCOL
 	DW	LIT,UVR		; Set user variables.
 	DW	UPP		; UP ( constant )
