@@ -11,7 +11,7 @@
 ; *                                                          *
 ; *                 i8080 & CP/M-80 ver. 2.2                 *
 ; *                                                          *
-; *                      Version 0.5.11                      *
+; *                      Version 0.6.0                       *
 ; *                                                          *
 ; *                                     (C) 2023-2024 Tsugu  *
 ; *                                                          *
@@ -56,7 +56,7 @@
 ;               |   .   |
 ;               |   .   |
 ;               |=======|
-;       LIT-6 ->| 022AH |     start of dictionary
+;       LIT-6 ->| 024EH |     start of dictionary
 ;               |   .   |
 ;               |   .   |
 ;      INITDP ->| ????H |     initial position of DP
@@ -76,20 +76,20 @@
 ;               | ----- |
 ;          SP  ^|   .   |     stack pointer (go upper)
 ;               |   .   |
-;               | 7E16H |     bottom of stack
+;               | 7716H |     bottom of stack
 ;               |=======|
-; INITS0, TIB ->| 7E18H |     terminal input buffer
+; INITS0, TIB ->| 7718H |     terminal input buffer
 ;               |   .   |
 ;               |   .   |
 ;               | ----- |
 ;          RP  ^|   .   |     return stack pointer (go upper)
 ;               |   .   |
-;               | 7EB6H |     bottom of return stack
+;               | 77B6H |     bottom of return stack
 ;               |=======|
-;  INITR0, UP ->| 7EB8H |     top of user variables area
+;  INITR0, UP ->| 77B8H |     top of user variables area
 ;               |   :   |
 ;               |=======|
-;       FIRST ->| 7EF8H |     top of disk buffers
+;       FIRST ->| 77F8H |     top of disk buffers
 ;               |   :   |
 ;               | 7FFEH |     bottom of disk buffers
 ;               |=======|
@@ -103,7 +103,7 @@
 ;               |           |   |
 ;               |           |   |
 ;               |           |   |
-;       buffer1 |    DATA   |  128 bytes
+;       buffer1 |    DATA   |  1024 bytes
 ;               ~           ~   |
 ;               ~           ~   |
 ;               |           |   |
@@ -115,7 +115,7 @@
 ;               |           |   |
 ;               |           |   |
 ;               |           |   |
-;       buffer2 |    DATA   |  128 bytes
+;       buffer2 |    DATA   |  1024 bytes
 ;               ~           ~   |
 ;               ~           ~   |
 ;               |           |   |
@@ -128,36 +128,36 @@
 ;
 ; *** Floppy Disk Configuration (CP/M Ver 2.2 standard) ***
 ;
-; BPS (bytes per sector) = 128
-;SPT	EQU	26	; sectors per track
 ; number of tracks = 77
+;BPS	EQU	128	; bytes per sector
+;SPT	EQU	26	; sectors per track
 ;DRSIZ	EQU	250	; drive size (KB)
 ;SOFSET	EQU	0	; offset for sector No.
 ;DOFSET	EQU	0	; offset for drive No. (0 = A:, 1 = B:)
 ;
 ; *** Floppy Disk Configuration (for emulator AltairZ80) ***
 ;
-; BPS (bytes per sector) = 128 (in actually, 137)
-SPT	EQU	32	; sectors per track
 ; number of tracks = 254
+BPS	EQU	128	; bytes per sector (in actually, 137)
+SPT	EQU	32	; sectors per track
 DRSIZ	EQU	1016	; drive size (KB)
 SOFSET	EQU	0	; offset for sector No.
 DOFSET	EQU	3	; offset for drive No. (0 = D:, 1 = E:)
 ;
 ; *** Floppy Disk Configuration (for emulator XM8, N-mode) ***
 ;
-; BPS (bytes per sector) = 128
-;SPT	EQU	64	; sectors per track
 ; number of tracks = 40
+;BPS	EQU	128	; bytes per sector
+;SPT	EQU	64	; sectors per track
 ;DRSIZ	EQU	320	; drive size (KB)
 ;SOFSET	EQU	0	; offset for sector No.
 ;DOFSET	EQU	0	; offset for drive No. (0 = A:, 1 = B:)
 ;
 ; *** Floppy Disk Configuration (for emulator XM8, V-mode) ***
 ;
-; BPS (bytes per sector) = 128
-;SPT	EQU	64	; sectors per track
 ; number of tracks = 40
+;BPS	EQU	128	; bytes per sector
+;SPT	EQU	64	; sectors per track
 ;DRSIZ	EQU	320	; drive size (KB)
 ;SOFSET	EQU	-1	; offset for sector No.
 ;DOFSET	EQU	0	; offset for drive No. (0 = A:, 1 = B:)
@@ -167,8 +167,8 @@ DOFSET	EQU	3	; offset for drive No. (0 = D:, 1 = E:)
 ; ***** System Memory Configuration *****
 ;
 ORIG0	EQU	100H
-BBUF0	EQU	128		; bytes per buffer = BPS
-BSCR0	EQU	8		; blocks per screen
+BBUF0	EQU	1024		; bytes per buffer
+BSCR0	EQU	1		; blocks per screen
 BFLEN0	EQU	BBUF0+4		; buffer tags length = 4
 LIMIT0	EQU	8000H
 NUMBU0	EQU	2		; number of disk block buffers
@@ -223,8 +223,8 @@ WRM1	DW	WARM
 ; ***** USER VARIABLES *****
 ;
 UVR	DW	0		; (release No.)
-	DW	5		; (revision No.)
-	DW	0B00H		; (user version)
+	DW	6		; (revision No.)
+	DW	0000H		; (user version xx[Alpahbet])
 	DW	INITS0		; S0
 	DW	INITR0		; R0
 	DW	INITS0		; TIB
@@ -314,9 +314,9 @@ POUT	DW	$+2
 	POP	B
 	JMP	NEXT
 ;
-; ( drvNo bufAddr secNo --- errFlg ; Read a sector on disks. )
-READ	DW	$+2
-	POP	D	; truck No.
+; ( drvNo bufAddr secNo trNo --- errFlg ; Read a sector on disks. )
+PREAD	DW	$+2
+	POP	D	; track No.
 	PUSH	B
 	MOV	C,E
 	MOV	B,D
@@ -355,9 +355,9 @@ READ	DW	$+2
 	MVI	H,0
 	JMP	HPUSH
 ;
-; ( drvNo bufAddr secNo --- errFLg ; Write a sector on disks. )
-WRITE	DW	$+2
-	POP	D	; truck No.
+; ( drvNo bufAddr secNo trNo --- errFLg ; Write a sector on disks. )
+PWRITE	DW	$+2
+	POP	D	; track No.
 	PUSH	B
 	MOV	C,E
 	MOV	B,D
@@ -395,6 +395,34 @@ WRITE	DW	$+2
 	MOV	L,A	; A = 0 if no error
 	MVI	H,0
 	JMP	HPUSH
+;
+; ( n1 a n2 --- ef ; 1 sector only )
+; n1: drive number
+; a : address of disk buffer
+; n2: reading sector
+; ef: error flag
+READ	DW	DOCOL
+	DW	LIT,SPT
+	DW	SLMOD		;  ( n1 a n2 n1 a r trNo )
+	DW	SWAP
+	DW	ONEP		;  Note. Sector No. is 1 base.
+	DW	SWAP		;  ( n1 a n2 n1 a secNo trNo )
+	DW	PREAD
+	DW	SEMIS
+;
+; ( n1 a n2 --- ef ; 1 sector only )
+; n1: drive number
+; a : address of disk buffer
+; n2: writing sector
+; ef: error flag
+WRITE	DW	DOCOL
+	DW	LIT,SPT
+	DW	SLMOD		;  ( n1 a n2 n1 a r trNo )
+	DW	SWAP
+	DW	ONEP		;  Note. Sector No. is 1 base.
+	DW	SWAP		;  ( n1 a n2 n1 a secNo trNo )
+	DW	WRITE
+	DW	SEMIS
 ;
 ; ***** FORTH INNER INTERPRETER *****
 ;
@@ -1135,52 +1163,9 @@ DOCOL:	LHLD	RPP
 	MOV	B,D
 	JMP	NEXT
 ;
-; ( --- a )
-	DB	0C5H,'DOES','>'+80H
-	DW	COLON-4
-DOES	DW	DOCOL
-	DW	COMP
-	DW	PSCOD
-	DW	LIT,0C3H	; jump code ('JMP' = 0xC3)
-	DW	CCOMM
-	DW	LIT,XDOES	; In 8080, no relative jump.
-	DW	COMMA
-	DW	SEMIS
-XDOES:	PUSH	H
-	; push IP to Return Stack
-	LHLD	RPP
-	DCX	H
-	MOV	M,B
-	DCX	H
-	MOV	M,C
-	SHLD	RPP
-	POP	H
-	; IP <- [HL]
-	MOV	C,L
-	MOV	B,H
-	; IP <- IP + 3 ("C3 xxxx" is 3 bytes)
-	INX	B
-	INX	B
-	INX	B
-	;
-	INX	D
-	PUSH	D
-	JMP	NEXT
-;
-; ( --- ) <name>
-	DB	86H,'CREAT','E'+80H
-	DW	DOES-8
-CREAT	DW	DOCOL
-	DW	PCREAT
-	DW	SMUDG
-	DW	PSCOD
-	INX	D	; DE = PFA
-	PUSH	D
-	JMP	NEXT
-;
 ; ( n --- ) <name>
 	DB	88H,'CONSTAN','T'+80H
-	DW	CREAT-9
+	DW	COLON-4
 CON	DW	DOCOL
 	DW	PCREAT
 	DW	SMUDG
@@ -1254,9 +1239,52 @@ DOUSE:	INX	D	; DE = PFA
 	DAD	D	; HL <- HL + DE
 	JMP	HPUSH
 ;
+; ( --- a )
+	DB	0C5H,'DOES','>'+80H
+	DW	USER-7
+DOES	DW	DOCOL
+	DW	COMP
+	DW	PSCOD
+	DW	LIT,0C3H	; jump code ('JMP' = 0xC3)
+	DW	CCOMM
+	DW	LIT,XDOES	; In 8080, no relative jump.
+	DW	COMMA
+	DW	SEMIS
+XDOES:	PUSH	H
+	; push IP to Return Stack
+	LHLD	RPP
+	DCX	H
+	MOV	M,B
+	DCX	H
+	MOV	M,C
+	SHLD	RPP
+	POP	H
+	; IP <- [HL]
+	MOV	C,L
+	MOV	B,H
+	; IP <- IP + 3 ("C3 xxxx" is 3 bytes)
+	INX	B
+	INX	B
+	INX	B
+	;
+	INX	D
+	PUSH	D
+	JMP	NEXT
+;
+; ( --- ) <name>
+	DB	86H,'CREAT','E'+80H
+	DW	DOES-8
+CREAT	DW	DOCOL
+	DW	PCREAT
+	DW	SMUDG
+	DW	PSCOD
+	INX	D	; DE = PFA
+	PUSH	D
+	JMP	NEXT
+;
 ; ( --- )
 	DB	84H,'COL','D'+80H
-	DW	USER-7
+	DW	CREAT-9
 COLD	DW	DOCOL
 	DW	LIT,UVR		; Set user variables.
 	DW	UPP		; UP ( constant )
@@ -1309,12 +1337,40 @@ EMIT2	DW	SEMIS
 	DB	88H,'READ-RE','C'+80H
 	DW	EMIT-7
 RREC	DW	DOCOL
-	DW	LIT,SPT
-	DW	SLMOD		; n1 a n2 n3
+	DW	LIT,BBUF0/BPS
+	DW	STAR
+	DW	LIT,BBUF0/BPS
+	DW	ZERO
+	DW	XDO		; DO
+RREC1	DW	THREE
+	DW	PICK
+	DW	THREE
+	DW	PICK
+	DW	THREE
+	DW	PICK		;  copy 3 values
+	DW	READ		;  ( n1 a n2' ef )
+	DW	DUPE
+	DW	ZBRAN,RREC2-$	;  IF ( n1 a n2' ef )
+	DW	LLEAVE
+	DW	BRAN,RREC3-$	;  ELSE ( n1 a n2' ef )
+RREC2	DW	IDO
+	DW	ONEP
+	DW	LIT,BBUF0/BPS
+	DW	LESS
+	DW	ZBRAN,RREC3-$	;   IF ( n1 a n2' ef )
+	DW	DROP		;    ( n1 a n2' )
 	DW	SWAP
-	DW	ONEP		; Note. Sector No. is 1 base.
+	DW	LIT,BPS
+	DW	PLUS
 	DW	SWAP
-	DW	READ
+	DW	ONEP		;    ( n1 a+128 n2'+1 )
+				;   THEN
+				;  THEN
+RREC3	DW	XLOOP,RREC1-$	; LOOP
+	DW	TOR
+	DW	TDROP
+	DW	DROP
+	DW	FROMR
 	DW	SEMIS
 ;
 ; ( n1 a n2 --- ef ; 1 block only )
@@ -1325,12 +1381,40 @@ RREC	DW	DOCOL
 	DB	89H,'WRITE-RE','C'+80H
 	DW	RREC-11
 WREC	DW	DOCOL
-	DW	LIT,SPT
-	DW	SLMOD
+	DW	LIT,BBUF0/BPS
+	DW	STAR
+	DW	LIT,BBUF0/BPS
+	DW	ZERO
+	DW	XDO		; DO
+WREC1	DW	THREE
+	DW	PICK
+	DW	THREE
+	DW	PICK
+	DW	THREE
+	DW	PICK		;  copy 3 values
+	DW	WRITE		;  ( n1 a n2' ef )
+	DW	DUPE
+	DW	ZBRAN,WREC2-$	;  IF ( n1 a n2' ef )
+	DW	LLEAVE
+	DW	BRAN,WREC3-$	;  ELSE ( n1 a n2' ef )
+WREC2	DW	IDO
+	DW	ONEP
+	DW	LIT,BBUF0/BPS
+	DW	LESS
+	DW	ZBRAN,WREC3-$	;   IF ( n1 a n2' ef )
+	DW	DROP		;    ( n1 a n2' )
 	DW	SWAP
-	DW	ONEP		; Note. Sector No. is 1 base.
+	DW	LIT,BPS
+	DW	PLUS
 	DW	SWAP
-	DW	WRITE
+	DW	ONEP		;    ( n1 a+128 n2'+1 )
+				;   THEN
+				;  THEN
+WREC3	DW	XLOOP,WREC1-$	; LOOP
+	DW	TOR
+	DW	TDROP
+	DW	DROP
+	DW	FROMR
 	DW	SEMIS
 ;
 ; 	===== constants =====
@@ -1655,56 +1739,68 @@ PFLAG	DW	DOUSE
 ; n3: offset to the first character not included
 	DB	87H,'ENCLOS','E'+80H
 	DW	PFLAG-8
-ENCL	DW	$+2
-	POP	D	; E <- delimiter
-	POP	H	; HL <- address
-	PUSH	H	; push address
-	MOV	A,E	; A <- delimiter
-	MVI	E,0FFH	; offset counter = -1
-	DCX	H	; HL <- address - 1
-	; next character
-ENCL1:	INX	H
-	INR	E
-	; if M == delimiter then jump to ENCL1
-	CMP	M
-	JZ	ENCL1
-	; push n1
-	MVI	D,0
-	PUSH	D	; push offset counter
-	MOV	D,A	; store delimiter to D
-	; if M <> null then jump to ENCL2
-	MOV	A,M
-	ANA	A
-	JNZ	ENCL2
-	; case 1 : null start, or, delimiter-null end
-	MVI	D,0
-	INR	E
-	PUSH	D	; push n2 (= counter + 1)
-	DCR	E
-	PUSH	D	; push n3 (= counter)
-	JMP	NEXT
-	; next character
-ENCL2:	MOV	A,D	; restore delimiter
-	INX	H
-	INR	E
-	; if M == delimiter then jump to ENCL3
-	CMP	M
-	JZ	ENCL3
-	; if delimiter <> null then jump to ENCL2
-	MOV	A,M
-	ANA	A
-	JNZ	ENCL2
-	; case 2 : text-null end
-	MVI	D,0
-	PUSH	D	; push n2 (= counter)
-	PUSH	D	; push n3 (= counter)
-	JMP	NEXT
-	; case 3 : text-delimiter end
-ENCL3:	MVI	D,0
-	PUSH	D	; push n2 (= counter)
-	INR	E
-	PUSH	D	; push n3 (= counter + 1)
-	JMP	NEXT
+ENCL	DW	DOCOL
+	DW	OVER
+	DW	DUPE
+	DW	TOR
+				; BEGIN
+ENCL1	DW	TDUP
+	DW	CAT
+	DW	EQUAL
+	DW	OVER
+	DW	CAT
+	DW	ZEQU
+	DW	ZBRAN,ENCL5-$	;  IF ( [n1] is null )
+	DW	DROP
+	DW	SWAP
+	DW	DROP
+	DW	FROMR
+	DW	SUBB
+	DW	DUPE
+	DW	ONEP
+	DW	OVER		;   ( a n1 n1+1 n1 )
+	DW	SEMIS		;   EXIT
+				;  THEN
+ENCL5	DW	ZBRAN,ENCL2-$	; WHILE
+	DW	ONEP
+	DW	BRAN,ENCL1-$	; REPEAT
+ENCL2	DW	DUPE
+	DW	TOR
+	DW	ONEP
+				; BEGIN
+ENCL3	DW	TDUP
+	DW	CAT
+	DW	NEQ
+	DW	OVER
+	DW	CAT
+	DW	ZEQU
+	DW	ZBRAN,ENCL6-$	;  IF ( [n2] is null )
+	DW	DROP
+	DW	SWAP
+	DW	DROP
+	DW	OVER
+	DW	SUBB
+	DW	FROMR
+	DW	FROMR
+	DW	SUBB
+	DW	SWAP
+	DW	DUPE		;   ( a n1 n2 n2 )
+	DW	SEMIS		;   EXIT
+				;  THEN
+ENCL6	DW	ZBRAN,ENCL4-$	; WHILE
+	DW	ONEP
+	DW	BRAN,ENCL3-$	; REPEAT ( [n1],[n2] <> null )
+ENCL4	DW	SWAP
+	DW	DROP
+	DW	OVER
+	DW	SUBB
+	DW	FROMR
+	DW	FROMR
+	DW	SUBB
+	DW	SWAP
+	DW	DUPE
+	DW	ONEP		; ( a n1 n2 n2+1 )
+	DW	SEMIS
 ;
 ; ( a1 a2 --- a / ff ;
 ;             Search a FORCE WORD in the FORTH DICTONARY. )
@@ -1712,42 +1808,43 @@ ENCL3:	MVI	D,0
 ; a2: NFA at which start searching
 ; a : CFA of the found word
 ; ff: false flag
+; ***** ASSEMBLY VERSION *****
 	DB	86H,'(FIND',')'+80H
 	DW	ENCL-10
 PFIND	DW	$+2
 	POP	D	; DE <- a2
-PFIND1:	POP	H	; HL <- a1
+PFIN1:	POP	H	; HL <- a1
 	PUSH	H	; save a1
 	; A <- [a2]
 	LDAX	D
 	; if A & 3FH <> 0 jump to PFIND4
 	XRA	M
 	ANI	3FH	; A & 00111111 (smudge bit & length)
-	JNZ	PFIND4
+	JNZ	PFIN4
 	; HL++, A <- [++DE]
-PFIND2:	INX	H
+PFIN2:	INX	H
 	INX	D
 	LDAX	D
 	; if (A ^ M) + A <> 0 then jump to PFIND3
 	XRA	M
 	ADD	A
-	JNZ	PFIND3	; no match
+	JNZ	PFIN3	; no match
 	; if CY == 0 then jump to PFIND2
-	JNC	PFIND2	; A & 80H <> 0
+	JNC	PFIN2	; A & 80H <> 0
 	; case 1 : string matches
 	LXI	H,3
 	DAD	D
 	XTHL		; [SP] <- CFA
 	JMP	NEXT
 	; if CY == 1 then jump to PFIND5
-PFIND3:	JC	PFIND5	; end of Name Field
+PFIN3:	JC	PFIN5	; end of Name Field
 	; find end of Name Field
-PFIND4:	INX	D
+PFIN4:	INX	D
 	LDAX	D
 	ORA	A
-	JP	PFIND4
+	JP	PFIN4
 	; DE <- [LFA]
-PFIND5:	INX	D	; DE <- LFA
+PFIN5:	INX	D	; DE <- LFA
 	XCHG		; HL <-> DE
 	MOV	E,M
 	INX	H
@@ -1755,11 +1852,71 @@ PFIND5:	INX	D	; DE <- LFA
 	; if DE <> 0 then goto PFIND1
 	MOV	A,D
 	ORA	E
-	JNZ	PFIND1	; next word
+	JNZ	PFIN1	; next word
 	; case 2 : not find
 	POP	H
 	LXI	H,0	; false
 	JMP	HPUSH
+; ****************************
+;	DB	86H,'(FIND',')'+80H
+;	DW	ENCL-10
+;PFIND	DW	DOCOL
+				; BEGIN
+;PFIND1	DW	OVER
+;	DW	TDUP
+;	DW	CAT
+;	DW	SWAP
+;	DW	CAT
+;	DW	LIT,3FH
+;	DW	ANDD		;  ( length and smudge bits )
+;	DW	EQUAL
+;	DW	ZBRAN,PFIND2-$	;  IF
+				;   BEGIN
+;PFIND4	DW	ONEP
+;	DW	SWAP
+;	DW	ONEP
+;	DW	SWAP
+;	DW	TDUP
+;	DW	CAT
+;	DW	SWAP
+;	DW	CAT
+;	DW	NEQ
+;	DW	ZBRAN,PFIND4-$	;   UNTIL
+;	DW	CAT
+;	DW	OVER
+;	DW	CAT
+;	DW	LIT,7FH
+;	DW	ANDD
+;	DW	EQUAL
+;	DW	ZBRAN,PFIND5-$	;   IF ( found )
+;	DW	SWAP
+;	DW	DROP
+;	DW	THREE
+;	DW	PLUS
+;	DW	SEMIS		;    EXIT
+				;   THEN
+;PFIND5	DW	ONEM
+;	DW	BRAN,PFIND3-$	;  ELSE
+;PFIND2	DW	DROP
+				;  THEN ( next word )
+				;  BEGIN
+;PFIND3	DW	ONEP
+;	DW	DUPE
+;	DW	CAT
+;	DW	LIT,80H
+;	DW	ANDD
+;	DW	ZBRAN,PFIND3-$	;  UNTIL
+;	DW	ONEP
+;	DW	ATT
+;	DW	DUPE
+;	DW	LIT,0H
+;	DW	EQUAL
+;	DW	ZBRAN,PFIND6-$	;  IF ( last word )
+;	DW	TDROP
+;	DW	ZERO		;   ( unfound )
+;	DW	SEMIS		;   EXIT
+				;  THEN
+;PFIND6	DW	BRAN,PFIND1-$	; AGAIN
 ;
 ; ( c n1 --- n2 tf / ff )
 ; c : character code
@@ -1769,30 +1926,54 @@ PFIND5:	INX	D	; DE <- LFA
 ; ff: false flag
 	DB	85H,'DIGI','T'+80H
 	DW	PFIND-9
-DIGIT	DW	$+2
-	POP	H	; HL <- n1
-	POP	D	; E <- c
-	; if c < '0' then jump to DIGIT2
-	MOV	A,E
-	SUI	30H
-	JM	DIGIT2
-	; if c < '9' then jump to DIGIT1
-	CPI	10	; 0 1 2 3 4 5 6 7 8 9
-	JM	DIGIT1
-	; if c < 'A' then jump to DIGIT2
-	SUI	7	; (... 8 9) : ; < = > ? @ (A B ...)
-	CPI	10	; (0 1 2 ... 9) A B C ...
-	JM	DIGIT2
-	; if A >= n1 then jump to DIGIT2
-DIGIT1:	CMP	L
-	JP	DIGIT2
-	; convert success
-	MOV	E,A	; converted digit
-	LXI	H,1	; true
-	JMP	DPUSH
-	; convert failure
-DIGIT2:	LXI	H,0	; false
-	JMP	HPUSH
+DIGIT	DW	DOCOL
+	DW	SWAP
+	DW	LIT,30H		; 30 ( '0' code )
+	DW	SUBB
+	DW	DUPE
+	DW	ZLESS
+	DW	ZBRAN,DIGI1-$	; IF
+	DW	TDROP
+	DW	ZERO
+	DW	BRAN,DIGI2-$	; ELSE
+DIGI1	DW	DUPE
+	DW	LIT,9H
+	DW	GREAT
+	DW	ZBRAN,DIGI3-$	;  IF
+	DW	LIT,7H		;   7 ( ":;<=>?@" )
+	DW	SUBB
+	DW	DUPE
+	DW	LIT,0AH
+	DW	LESS
+	DW	ZBRAN,DIGI4-$	;   IF
+	DW	TDROP
+	DW	ZERO
+	DW	BRAN,DIGI5-$	;   ELSE
+DIGI4	DW	TDUP
+	DW	GREAT
+	DW	ZBRAN,DIGI6-$	;    IF
+	DW	SWAP
+	DW	DROP
+	DW	ONE
+	DW	BRAN,DIGI5-$	;    ELSE
+DIGI6	DW	TDROP
+	DW	ZERO
+				;    THEN
+				;   THEN
+DIGI5	DW	BRAN,DIGI2-$	;  ELSE
+DIGI3	DW	TDUP
+	DW	GREAT
+	DW	ZBRAN,DIGI7-$	;   IF
+	DW	SWAP
+	DW	DROP
+	DW	ONE
+	DW	BRAN,DIGI2-$	;   ELSE
+DIGI7	DW	TDROP
+	DW	ZERO
+				;   THEN
+				;  THEN
+				; THEN
+DIGI2	DW	SEMIS
 ;
 ; ( n --- -n )
 	DB	86H,'NEGAT','E'+80H
@@ -1854,11 +2035,11 @@ LROT	DW	DOCOL
 ; ( a --- c ; c = [a] )
 	DB	82H,'C','@'+80H
 	DW	LROT-7
-CAT	DW	$+2
-	POP	H
-	MOV	L,M
-	MVI	H,0
-	JMP	HPUSH
+CAT	DW	DOCOL
+	DW	ATT
+	DW	LIT,0FFH
+	DW	ANDD
+	DW	SEMIS
 ;
 ; ( f1 --- f2 )
 	DB	83H,'NO','T'+80H
@@ -1870,19 +2051,10 @@ NOTT	DW	DOCOL
 ; ( n1 n2 --- f )
 	DB	81H,'='+80H
 	DW	NOTT-6
-EQUAL	DW	$+2
-	POP	H
-	POP	D
-	MOV	A,E
-	SUB	L
-	MOV	E,A
-	MOV	A,D
-	SBB	H	; AE <- DE - HL
-	ORA	E	; A <- A | E
-	LXI	H,1
-	JZ	EQUAL1
-	DCX	H
-EQUAL1:	JMP	HPUSH
+EQUAL	DW	DOCOL
+	DW	SUBB
+	DW	ZEQU
+	DW	SEMIS
 ;
 ; ( n1 n2 --- f )
 	DB	82H,'<','>'+80H
@@ -1895,32 +2067,18 @@ NEQ	DW	DOCOL
 ; ( n1 n2 --- f )
 	DB	81H,'<'+80H
 	DW	NEQ-5
-LESS	DW	$+2
-	POP	H
-	POP	D
-	MOV	A,E
-	CMP	L
-	MOV	A,D
-	SBB	H	; DE - HL = n1 - n2
-	LXI	H,1
-	JM	LESS1
-	DCX	H
-LESS1:	JMP	HPUSH
+LESS	DW	DOCOL
+	DW	SUBB
+	DW	ZLESS
+	DW	SEMIS
 ;
 ; ( n1 n2 --- f )
 	DB	81H,'>'+80H
 	DW	LESS-4
-GREAT	DW	$+2
-	POP	D
-	POP	H
-	MOV	A,E
-	CMP	L
-	MOV	A,D
-	SBB	H	; DE - HL = n2 - n1
-	LXI	H,1
-	JM	GREAT1
-	DCX	H
-GREAT1:	JMP	HPUSH
+GREAT	DW	DOCOL
+	DW	SWAP
+	DW	LESS
+	DW	SEMIS
 ;
 	DB	82H,'0','>'+80H
 	DW	GREAT-4
@@ -1932,17 +2090,19 @@ ZGREAT	DW	DOCOL
 ; ( u1 u2 --- f )
 	DB	82H,'U','<'+80H
 	DW	ZGREAT-5
-ULESS	DW	$+2
-	POP	H
-	POP	D
-	MOV	A,E
-	CMP	L
-	MOV	A,D
-	SBB	H	; DE - HL = n1 - n2
-	LXI	H,1
-	JC	ULESS1
-	DCX	H
-ULESS1:	JMP	HPUSH
+ULESS	DW	DOCOL
+	DW	TDUP
+	DW	XORR
+	DW	ZLESS
+	DW	ZBRAN,ULESS1-$	; IF ( u1's MSB <> u2's MSB)
+	DW	DROP
+	DW	ZLESS		;  ( u1's MSB = 1 ? )
+	DW	ZEQU		;  ( u1's MSB = 0 ? )
+	DW	BRAN,ULESS2-$	; ELSE
+ULESS1	DW	SUBB
+	DW	ZLESS		;  (u1 < u2 ? )
+				; THEN
+ULESS2	DW	SEMIS
 ;
 ; ( d1 d2 --- f )
 	DB	82H,'D','<'+80H
@@ -2152,58 +2312,45 @@ TDROP	DW	DOCOL
 ; ( a --- d )
 	DB	82H,'2','@'+80H
 	DW	TDROP-8
-TAT	DW	$+2
-	POP	H	; H <- a
-	;
-	LXI	D,2
-	DAD	D	; HL <- HL + 2
-	MOV	E,M	; E <- [a+2]
-	INX	H
-	MOV	D,M	; D <- [a+3]
-	PUSH	D	; push [a+3][a+2]
-	;
-	LXI	D,-3
-	DAD	D	; HL <- HL - 3
-	MOV	E,M	; E <- [a]
-	INX	H
-	MOV	D,M	; D <- [a+1]
-	PUSH	D	; push [a+1][a]
-	;
-	JMP	NEXT
+TAT	DW	DOCOL
+	DW	DUPE
+	DW	ATT
+	DW	SWAP
+	DW	TWOP
+	DW	ATT
+	DW	SEMIS
 ;
 ; ( n --- n+1 )
 	DB	82H,'1','+'+80H
 	DW	TAT-5
-ONEP	DW	$+2
-	POP	H
-	INX	H
-	JMP	HPUSH
+ONEP	DW	DOCOL
+	DW	ONE
+	DW	PLUS
+	DW	SEMIS
 ;
 ; ( n --- n+2 )
 	DB	82H,'2','+'+80H
 	DW	ONEP-5
-TWOP	DW	$+2
-	POP	H
-	INX	H
-	INX	H
-	JMP	HPUSH
+TWOP	DW	DOCOL
+	DW	TWO
+	DW	PLUS
+	DW	SEMIS
 ;
 ; ( n --- n-1 )
 	DB	82H,'1','-'+80H
 	DW	TWOP-5
-ONEM	DW	$+2
-	POP	H
-	DCX	H
-	JMP	HPUSH
+ONEM	DW	DOCOL
+	DW	ONE
+	DW	SUBB
+	DW	SEMIS
 ;
 ; ( n --- n-2 )
 	DB	82H,'2','-'+80H
 	DW	ONEM-5
-TWOM	DW	$+2
-	POP	H
-	DCX	H
-	DCX	H
-	JMP	HPUSH
+TWOM	DW	DOCOL
+	DW	TWO
+	DW	SUBB
+	DW	SEMIS
 ;
 ; ( n --- n+n )
 	DB	82H,'2','*'+80H
@@ -3033,34 +3180,41 @@ PLOOP	DW	DOCOL
 ; ( --- ; Exit a loop. )
 	DB	85H,'LEAV','E'+80H
 	DW	PLOOP-8
-LLEAVE	DW	$+2
-	LHLD	RPP
-	MOV	E,M
-	INX	H
-	MOV	D,M	; DE <- i
-	INX	H
-	MOV	M,E
-	INX	H
-	MOV	M,D	; limit_i <- DE (i.e. limit_i = i)
-	JMP	NEXT
+LLEAVE	DW	DOCOL
+	DW	FROMR
+	DW	FROMR
+	DW	DUPE
+	DW	FROMR
+	DW	DROP
+	DW	TOR
+	DW	TOR
+	DW	TOR
+	DW	SEMIS
 ;
 ; ( --- n ; n = loop counter )
 	DB	81H,'I'+80H
 	DW	LLEAVE-8
-IDO	DW	RAT+2
+IDO	DW	DOCOL
+	DW	FROMR
+	DW	RAT
+	DW	SWAP
+	DW	TOR
+	DW	SEMIS
 ;
 ; ( --- n ; n = outer loop counter )
 	DB	81H,'J'+80H
 	DW	IDO-4
-JDO	DW	$+2
-	LHLD	RPP
-	LXI	D,4	; Return Stack : ... limit_j j limit_i i
-	DAD	D
-	MOV	E,M
-	INX	H
-	MOV	D,M
-	PUSH	D
-	JMP	NEXT
+JDO	DW	DOCOL
+	DW	FROMR
+	DW	FROMR
+	DW	FROMR
+	DW	RAT
+	DW	LROT
+	DW	TOR
+	DW	TOR
+	DW	SWAP
+	DW	TOR
+	DW	SEMIS
 ;
 ; ( --- )
 	DB	0C4H,'EXI','T'+80H
@@ -3425,15 +3579,6 @@ UPDAT	DW	DOCOL
 	DW	PREV
 	DW	ATT
 	DW	STORE
-; ADDITIONAL PART (to restore end nulls)
-	DW	ZERO
-	DW	PREV
-	DW	ATT
-	DW	BBUF
-	DW	PLUS
-	DW	TWOP
-	DW	STORE
-;
 	DW	SEMIS
 ;
 ; ( --- )
@@ -3948,7 +4093,7 @@ SCODE	DW	DOCOL
 	DW	ASSEM		; [COMPILE] ASSEMBLER
 	DW	SEMIS
 ;
-; ( scr --- )
+; ( n --- )
 	DB	84H,'LIS','T'+80H
 	DW	SCODE-8
 LIST	DW	DOCOL
