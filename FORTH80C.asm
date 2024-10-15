@@ -4,8 +4,8 @@
 ; *                  F  O  R  T  H  8  0  C                  *
 ; *                                                          *
 ; *                                                          *
-; *                A FORTH langage proccessor                *
-; *              conformiting FORTH-79 Standard              *
+; *                A FORTH language processor                *
+; *               conforming FORTH-79 Standard               *
 ; *                                                          *
 ; *                           for                            *
 ; *                                                          *
@@ -108,7 +108,7 @@
 ;               ~           ~   |
 ;               |           |   |
 ;               |-----------| -----
-;               | 00H | 00H | double null charcters
+;               | 00H | 00H | double null characters
 ;               |===========|
 ;               | f |   n   |
 ;               |-----------| -----
@@ -223,7 +223,7 @@ WRM1	DW	WARM
 ;
 UVR	DW	0		; (release No.)
 	DW	7		; (revision No.)
-	DW	0000H		; (user version xx[Alpahbet])
+	DW	0000H		; (user version xx[Alphabet])
 	DW	INITS0		; S0
 	DW	INITR0		; R0
 	DW	INITS0		; TIB
@@ -270,7 +270,7 @@ IOS:	LHLD	BIOST
 	DAD	D
 	PCHL
 ;
-; ( --- f ; Take a type-state of keybord. )
+; ( --- f ; Take a type-state of keyboard. )
 CTST	DW	$+2
 	PUSH	B
 	LXI	D,CONSTA
@@ -281,7 +281,7 @@ CTST	DW	$+2
 	MVI	H,0
 	JMP	HPUSH
 ;
-; ( --- c ; Input one character from keybord. )
+; ( --- c ; Input one character from keyboard. )
 CIN	DW	$+2
 	PUSH	B
 	LXI	D,CONIN
