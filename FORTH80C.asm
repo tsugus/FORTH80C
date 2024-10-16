@@ -11,7 +11,7 @@
 ; *                                                          *
 ; *                 i8080 & CP/M-80 ver. 2.2                 *
 ; *                                                          *
-; *                      Version 0.7.0                       *
+; *                      Version 0.7.1                       *
 ; *                                                          *
 ; *                                     (C) 2023-2024 Tsugu  *
 ; *                                                          *
@@ -223,7 +223,7 @@ WRM1	DW	WARM
 ;
 UVR	DW	0		; (release No.)
 	DW	7		; (revision No.)
-	DW	0000H		; (user version xx[Alphabet])
+	DW	0100H		; (user version xx[Alphabet])
 	DW	INITS0		; S0
 	DW	INITR0		; R0
 	DW	INITS0		; TIB
@@ -2812,7 +2812,7 @@ PAD	DW	DOCOL
 	DW	PLUS
 	DW	SEMIS
 ;
-; ( --- a )
+; ( --- a ; a is the last word's nfa. )
 	DB	86H,'LATES','T'+80H
 	DW	PAD-6
 LATES	DW	DOCOL
@@ -3729,7 +3729,7 @@ INTER1	DW	FIND
 	DW	QDUP
 	DW	ZBRAN,INTER2-$	;  IF
 	DW	DUPE
-	DW	TWOP
+	DW	TWOP		;   cfa -> pfa
 	DW	NFA
 	DW	CAT
 	DW	STATE
@@ -3954,10 +3954,8 @@ PCREAT	DW	DOCOL
 	DW	QDUP
 	DW	ZBRAN,PCREA1-$	; IF
 	DW	CR
-	DW	THREE
-	DW	SUBB
-	DW	MONE
-	DW	TRAV
+	DW	TWOP		;  cfa -> pfa
+	DW	NFA
 	DW	IDDOT
 	DW	LIT,4H
 	DW	MESS
@@ -3993,10 +3991,8 @@ PCREA1	DW	HERE
 PSCOD	DW	DOCOL
 	DW	FROMR
 	DW	LATES
-	DW	ONE
-	DW	TRAV
-	DW	THREE
-	DW	PLUS
+	DW	PFA
+	DW	CFA
 	DW	STORE
 	DW	SEMIS
 ;
