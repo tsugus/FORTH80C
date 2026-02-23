@@ -12,12 +12,14 @@ FORTH80C complies with FORTH-79 standard.
 -------------------------
 -------------------------
 
-# cpmadd88
+## <del>cpmadd88</del>
 
-This program writes a file into a CP/M disk image in .d88 format.
+It turns out that it can't transfer files larger than 64KB, so I deleted this utility program.
 
-> ./cpmadd \<filename 1> \<filename 2\> \[ENTER\]
+I wrote *cpmadd88* to transfer FORTH80C.asm into a *.d88* disk image file, but I was satisfied with that and didn't test it with a larger file. And it turned out that was almost the maximum size that could be transferred successfully. What unfortunate "luck"!
 
-It writes the CP/M file \<filename 2\> into the .d88 file \<filename 1>.
+Now, at this point, it's better to use a proper app made by someone else.
 
-Note. This program does not write into free space between data.
+Such an app exists, and it has even been updated for the M1 Mac!
+
+[L3 Disk Explorer](http://s-sasaji.ddo.jp/bml3mk5/download.htm#l3diskex). It's a great app. Use it to transfer files.
